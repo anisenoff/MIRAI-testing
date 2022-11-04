@@ -434,6 +434,12 @@ impl<'tcx> CallGraph<'tcx> {
     ) {
         if self.config.call_sites_output_path.is_some() && !self.non_local_defs.contains(&caller) {
             self.call_sites.insert(loc, (caller, callee));
+            /*
+            println!("{:?}", loc);
+            println!("{:?}", caller);
+            println!("{:?}", callee);
+            println!("----------");
+            */
             if external_callee {
                 self.non_local_defs.insert(callee);
             }
@@ -900,13 +906,14 @@ impl<'tcx> CallGraph<'tcx> {
         // and we default to a starting ID of 0.
         let mut max_id: u32 = *type_map.keys().into_iter().max().unwrap_or(&0);
         if let Some(path) = type_relations_path {
-            let input_type_relations_raw: TypeRelationsRaw = match fs::read_to_string(path)
+            let input_type_relations_raw: TypeRelationsRaw = match 
+            fs::read_to_string(path)
                 .map_err(|e| e.to_string())
                 .and_then(|input_type_relations_str| {
                     serde_json::from_str(&input_type_relations_str).map_err(|e| e.to_string())
                 }) {
                 Ok(relations) => relations,
-                Err(e) => panic!("Failed to read input type relations: {:?}", e),
+                Err(e) => panic!("Failed to read input type relations: {:?}, {}", e, path.display()),
             };
             let input_relations = input_type_relations_raw.relations;
             for relation in input_relations.iter() {
@@ -1087,7 +1094,245 @@ impl<'tcx> CallGraph<'tcx> {
             call_graph.to_call_sites(Path::new(call_path.as_ref()));
         }
     }
+
+    fn fn_of_interest()->HashSet<String> {
+        let mut functions_of_interest = HashSet::new();
+
+        functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
+        functions_of_interest.insert("std::process::{impl#}::output".to_string());
+        functions_of_interest.insert("std::process::{impl#}::status".to_string());
+        //exec	std::os::unix::process::CommandExt
+        functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
+        functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
+        functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
+        functions_of_interest.insert("std::fs::write".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::write".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::create".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::_create".to_string());//create	std::fs::DirBuilder
+        functions_of_interest.insert("std::fs::{impl#}::open".to_string());
+        functions_of_interest.insert("std::fs::read".to_string());
+        functions_of_interest.insert("std::fs::read_to_string".to_string());
+        //include_str	macro
+        //include_bytes	macro
+        //include	macro
+        functions_of_interest.insert("std::fs::remove_dir".to_string());
+        functions_of_interest.insert("std::fs::remove_dir_all".to_string());
+        functions_of_interest.insert("std::fs::remove_file".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::set_len".to_string());
+        functions_of_interest.insert("std::fs::rename".to_string());
+        functions_of_interest.insert("std::fs::copy".to_string());
+        functions_of_interest.insert("std::fs::create_dir".to_string());
+        functions_of_interest.insert("std::fs::create_dir_all".to_string());
+        functions_of_interest.insert("std::fs::hard_link".to_string());
+        functions_of_interest.insert("std::os::unix::fs::symlink".to_string());
+        //symlink_dir	std::os::windows::fs
+        //symlink_file	std::os::windows::fs
+        functions_of_interest.insert("std::fs::read_dir".to_string());
+        functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
+        functions_of_interest.insert("std::os::unix::fs::chroot".to_string());
+        functions_of_interest.insert("std::env::set_current_dir".to_string());
+        //option_env	macro
+        functions_of_interest.insert("std::env::set_var".to_string());
+        functions_of_interest.insert("std::env::remove_var".to_string());
+        functions_of_interest.insert("std::net::addr::{impl#}::to_socket_addrs".to_string());
+        functions_of_interest.insert("std::fs::read_link".to_string());
+        functions_of_interest.insert("std::path::{impl#}::read_link".to_string());
+        //set_permissions	std::fs #covered by metadata
+        //metadata	std::path::Path
+        functions_of_interest.insert("std::fs::metadata".to_string());
+        //symlink_metadata	std::fs and std::path::Path
+        functions_of_interest.insert("std::fs::symlink_metadata".to_string());
+        functions_of_interest.insert("std::path::{impl#}::symlink_metadata".to_string());
+        //set_permissions	std::fs::File
+        functions_of_interest.insert("std::env::vars".to_string());
+        functions_of_interest.insert("std::env::var_os".to_string());
+        functions_of_interest.insert("std::env::var".to_string());
+        functions_of_interest.insert("std::path::{impl#}::exists".to_string());
+        functions_of_interest.insert("std::path::{impl#}::is_file".to_string());
+        functions_of_interest.insert("std::path::{impl#}::is_dir".to_string());
+        functions_of_interest.insert("std::path::{impl#}::is_symlink".to_string());
+        //is_symlink_dir	std::os::windows::fs::FileTypeExt
+        //is_symlink_file	std::os::windows::fs::FileTypeExt
+        //try_exists	std::fs #unstable
+        functions_of_interest.insert("std::path::{impl#}::try_exists".to_string());
+        functions_of_interest.insert("std::env::current_dir".to_string());
+        functions_of_interest.insert("std::env::current_exe".to_string());
+        functions_of_interest.insert("std::env::temp_dir".to_string());
+        functions_of_interest.insert("std::fs::canonicalize".to_string());
+        functions_of_interest.insert("std::path::{impl#}::canonicalize".to_string());
+        functions_of_interest.insert("std::os::unix::net::datagram::{impl#}::bind".to_string());
+        //bind_addr	std::os::unix::net::UnixDatagram nightly
+        //connect	std::os::unix::net::UnixDatagram
+        functions_of_interest.insert("".to_string());
+        //connect_addr	std::os::unix::net::UnixDatagram nightly
+        //send_to	std::os::unix::net::UnixDatagram
+        functions_of_interest.insert("".to_string());
+        //send_to_addr	std::os::unix::net::UnixDatagram
+        functions_of_interest.insert("".to_string());
+        //shutdown	std::os::unix::net::UnixDatagram
+        functions_of_interest.insert("".to_string());
+        functions_of_interest.insert("std::os::unix::net::listener::{impl#}::bind".to_string());
+        functions_of_interest.insert("std::os::unix::net::stream::{impl#}::connect".to_string());
+        //recv_from	std::os::unix::net::UnixDatagram
+        functions_of_interest.insert("".to_string());
+        //is_x86_feature_detected	std macro
+        //ARCH	std::env::consts
+        //DLL_EXTENSION	std::env::consts
+        //DLL_PREFIX	std::env::consts
+        //DLL_SUFFIX	std::env::consts
+        //EXE_EXTENSION	std::env::consts
+        //EXE_SUFFIX	std::env::consts
+        //FAMILY	std::env::consts
+        //OS	std::env::consts
+        //cfg	std
+        functions_of_interest.insert("".to_string());
+        //cfg macro
+        functions_of_interest.insert("std::io::stdio::stdin".to_string()); //read_line	std::io::stdin
+        //unreachable_unchecked	std::hint
+        //parent_id	Function std::os::unix::process
+        functions_of_interest.insert("std::env::args_os".to_string());
+        functions_of_interest.insert("std::env::args".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
+        functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
+
+
+        functions_of_interest.insert("std::io::Write::write_all".to_string());
+
+        return functions_of_interest;
+
+    }
+
+    fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>){
+        println!("Call Path: ");
+        for (call, loc) in call_path {
+                println!("Call: {:?}, {:?}", call, loc);
+                
+            }
+
+    }
+
+    fn get_path(callee_to_caller_loc: &HashMap<&DefId, Vec<(&DefId, &&rustc_span::Span)>>, search_callee:DefId, call_path: &Vec<(&DefId, &&rustc_span::Span)>){
+
+        match callee_to_caller_loc.get(&search_callee) {
+            None => {Self::print_call_path(call_path);},
+            Some(list_of_callers) => {
+                //println!("{:?}",list_of_callers);
+                for (call, loc) in list_of_callers {
+                    if call_path.contains(&(call, loc)){
+                        //have not tested this at all
+                        Self::print_call_path(call_path);
+                        println!("loop");
+                    } else {
+                        //add to the history, change callee
+                        //if not a loop call the new fn
+                        let mut new_path = (*call_path).clone();
+                        new_path.push((call, loc));
+                        Self::get_path(callee_to_caller_loc, **call, &new_path);
+
+
+                    }
+                    
+                }
+                    
+            },
+        }
+
+
+    }
+    
+    /// Top-level output function.
+    ///
+    /// First applies a set of reductions to the call graph.
+    /// Then produces Datalog and / or dot file output of the call graph.
+    pub fn print_output(&self) {
+        let call_graph = self.reduce_graph(self.clone(), &self.config.reductions);
+        let mut sites: Vec<(&rustc_span::Span, &(DefId, DefId))> =
+            call_graph.call_sites.iter().collect();
+        sites.sort();
+
+        //let mut found_parent = true;
+        
+        let functions_of_interest = Self::fn_of_interest();
+        
+
+        //IT WOULD PROBS BE BETTER TO DO THIS ALL WHEN THE CALL GRAPH STUFF IS ORIGINALLY SET UP BUT THIS SHOULD WORK FOR NOW
+        let mut callee_to_caller_loc = HashMap::new();
+        for (loc, (caller, callee)) in sites.iter(){
+            
+            callee_to_caller_loc.entry(callee).or_insert_with(Vec::new).push((caller, loc));
+           
+
+        }
+        
+        //might duplicate if there are multiple sensitive calls in a trace
+        for (loc, (caller, callee)) in sites.iter(){
+            //println!("all fns: {:?}", callee);
+            
+            
+            
+            if functions_of_interest.contains(&*format_name_no_num(*callee)){
+                println!("~~~New Fn~~~~~");
+                let mut call_path = Vec::new();
+                call_path.push((callee, loc));
+                //println!("Before call get_path {:?}", call_path);
+                Self::get_path(&callee_to_caller_loc, *caller, &call_path);
+
+
+                //let mut found_parent=true;
+                //println!("Potentially Dangerous Fn: {:?}, {:?}", callee, loc);
+                //println!("Caller: {:?}", caller);
+
+
+                //
+                //this only does one path!!!!
+                //stop when it can't find a new path up
+                 /*
+                 search_callee = caller;
+                 while found_parent {
+                    found_parent=false;
+                   match callee_to_caller_loc.get(search_callee) {
+                        Some((caller2, loc2)) => {
+                            println!("Caller: {:?}, {:?}", search_callee, loc2);
+                            //println!("Caller: {:?}", caller2);
+                            search_callee = caller2;
+                            found_parent=true;
+                        },
+                        None => println!("Caller: {:?}, no parent", search_callee)
+                    }
+
+                  
+            }*/
+
+
+        }
+        else {
+            //println!("~~~New Fn~~~~~");
+            //println!("{:?}, {:?}", callee, format_name_no_num(*callee));
+
+        }
+        
+    }
 }
+
+}
+
+/* 
+fn print_type_of<T>(_: &T) {
+    println!("{}", std::any::type_name::<T>())
+}
+*/
+
+/// Extracts a function name from the DefId of a function.
+    fn format_name_no_num(defid: DefId) -> Box<str> {
+        let tmp1 = format!("{:?}", defid);
+        let tmp2: &str = tmp1.split("~ ").collect::<Vec<&str>>()[1];
+        let tmp3 = tmp2.replace(')', "");
+        let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
+        let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
+        let num_removed: String = rhs.chars().filter(|c| !c.is_digit(10)).collect();
+        format!("{}{}", lhs, num_removed).into_boxed_str()
+    }
+
 
 /// Supported Datalog output formats
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]

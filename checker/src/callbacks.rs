@@ -157,7 +157,9 @@ impl MiraiCallbacks {
             type_cache: Rc::new(RefCell::new(TypeCache::new())),
             call_graph: CallGraph::new(call_graph_config, tcx),
         };
+        
         crate_visitor.analyze_some_bodies();
         crate_visitor.call_graph.output();
+        crate_visitor.call_graph.print_output();
     }
 }
