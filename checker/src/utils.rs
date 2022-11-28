@@ -86,6 +86,8 @@ pub fn contains_function<'tcx>(ty: Ty<'tcx>, tcx: TyCtxt<'tcx>) -> bool {
 /// Returns true if the function identified by def_id is a public function.
 #[logfn(TRACE)]
 pub fn is_public(def_id: DefId, tcx: TyCtxt<'_>) -> bool {
+    use rustc_hir::def_id::LocalDefId;
+
     if tcx.hir().get_if_local(def_id).is_some() {
         let def_id = def_id.expect_local();
         match tcx.resolutions(()).visibilities.get(&def_id) {
@@ -105,7 +107,8 @@ pub fn is_public(def_id: DefId, tcx: TyCtxt<'_>) -> bool {
                     }) => ty::Visibility::Restricted(tcx.parent_module(hir_id).to_def_id())
                         .is_public(),
                     Node::ImplItem(..) => {
-                        match tcx.hir().get_by_def_id(tcx.hir().get_parent_item(hir_id)) {
+                        let parent_def_id: LocalDefId = tcx.hir().get_parent_item(hir_id).def_id;
+                        match tcx.hir().get_by_def_id(parent_def_id) {
                             Node::Item(rustc_hir::Item {
                                 kind:
                                     rustc_hir::ItemKind::Impl(rustc_hir::Impl {
@@ -372,26 +375,21 @@ pub fn summary_key_str(tcx: TyCtxt<'_>, def_id: DefId) -> Rc<str> {
             name.push('.');
         }
         push_component_name(component.data, &mut name);
-        if component.disambiguator != 0 {
-            name.push('_');
-            if component.data == DefPathData::Impl {
-                let parent_def_id = tcx.parent(def_id);
-                let parent_def_kind = tcx.def_kind(parent_def_id);
-                if matches!(
-                    parent_def_kind,
-                    DefKind::Struct
-                        | DefKind::Union
-                        | DefKind::Enum
-                        | DefKind::Variant
-                        | DefKind::TyAlias
-                        | DefKind::Impl
-                ) {
-                    append_mangled_type(&mut name, tcx.type_of(parent_def_id), tcx);
-                    continue;
-                }
+        if component.data == DefPathData::Impl {
+            let parent_def_id = tcx.parent(def_id);
+            let parent_def_kind = tcx.def_kind(parent_def_id);
+            if matches!(
+                parent_def_kind,
+                DefKind::Struct
+                    | DefKind::Union
+                    | DefKind::Enum
+                    | DefKind::Variant
+                    | DefKind::TyAlias
+                    | DefKind::Impl
+            ) {
+                name.push('_');
+                append_mangled_type(&mut name, tcx.type_of(parent_def_id), tcx);
             }
-            let da = component.disambiguator.to_string();
-            name.push_str(da.as_str());
         }
     }
     Rc::from(name.as_str())
@@ -431,6 +429,32 @@ fn push_component_name(component_data: DefPathData, target: &mut String) {
             _ => assume_unreachable!(),
         }),
     };
+}
+
+/// Returns a human readable string representation of the item defined by def_id.
+/// This is different from summary_key_str, in that it does not mangle type argument
+/// values into the item name and furthermore includes parameter types and the
+/// return types of functions. This is intended for use in call graphs.
+pub fn def_id_as_qualified_name_str(tcx: TyCtxt<'_>, def_id: DefId) -> Rc<str> {
+    let mut name = format!("/{}/", crate_name(tcx, def_id));
+    name.push_str(&tcx.def_path_str(def_id));
+    let fn_ty = tcx.type_of(def_id);
+    if fn_ty.is_fn() {
+        name.push('(');
+        let fn_sig = fn_ty.fn_sig(tcx).skip_binder();
+        let mut first = true;
+        for param_ty in fn_sig.inputs() {
+            if first {
+                first = false;
+            } else {
+                name.push(',')
+            }
+            name.push_str(&format!("{:?}", param_ty));
+        }
+        name.push_str(")->");
+        name.push_str(&format!("{:?}", fn_sig.output()));
+    }
+    Rc::from(name.as_str())
 }
 
 /// Returns a readable display name for a DefId. This name may not be unique.
