@@ -1101,7 +1101,8 @@ impl<'tcx> CallGraph<'tcx> {
         functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
         functions_of_interest.insert("std::process::{impl#}::output".to_string());
         functions_of_interest.insert("std::process::{impl#}::status".to_string());
-        //exec	std::os::unix::process::CommandExt
+        //exec	std::os::unix::process::CommandExt #untested
+        functions_of_interest.insert("std::process::{impl#}::exec".to_string());
         functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
         functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
         functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
@@ -1125,8 +1126,10 @@ impl<'tcx> CallGraph<'tcx> {
         functions_of_interest.insert("std::fs::create_dir_all".to_string());
         functions_of_interest.insert("std::fs::hard_link".to_string());
         functions_of_interest.insert("std::os::unix::fs::symlink".to_string());
-        //symlink_dir	std::os::windows::fs
-        //symlink_file	std::os::windows::fs
+        //symlink_dir	std::os::windows::fs #untested
+        functions_of_interest.insert("std::os::windows::fs::symlink_dir".to_string());
+        //symlink_file	std::os::windows::fs #untested
+        functions_of_interest.insert("std::os::windows::fs::symlink_file".to_string());
         functions_of_interest.insert("std::fs::read_dir".to_string());
         functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
         functions_of_interest.insert("std::os::unix::fs::chroot".to_string());
@@ -1227,6 +1230,7 @@ impl<'tcx> CallGraph<'tcx> {
                         //if not a loop call the new fn
                         let mut new_path = (*call_path).clone();
                         new_path.push((call, loc));
+                        
                         Self::get_path(callee_to_caller_loc, **call, &new_path);
 
 
@@ -1263,12 +1267,13 @@ impl<'tcx> CallGraph<'tcx> {
            
 
         }
+
         
         //might duplicate if there are multiple sensitive calls in a trace
         for (loc, (caller, callee)) in sites.iter(){
             //println!("all fns: {:?}", callee);
             
-            
+            println!("{:?}",callee);
             
             if functions_of_interest.contains(&*format_name_no_num(*callee)){
                 println!("~~~New Fn~~~~~");
