@@ -15,7 +15,6 @@ use std::ops::Deref;
 use std::rc::Rc;
 use std::time::Instant;
 
-
 use log::*;
 use log_derive::{logfn, logfn_inputs};
 

@@ -434,12 +434,6 @@ impl<'tcx> CallGraph<'tcx> {
     ) {
         if self.config.call_sites_output_path.is_some() && !self.non_local_defs.contains(&caller) {
             self.call_sites.insert(loc, (caller, callee));
-            /*
-            println!("{:?}", loc);
-            println!("{:?}", caller);
-            println!("{:?}", callee);
-            println!("----------");
-            */
             if external_callee {
                 self.non_local_defs.insert(callee);
             }
@@ -906,14 +900,17 @@ impl<'tcx> CallGraph<'tcx> {
         // and we default to a starting ID of 0.
         let mut max_id: u32 = *type_map.keys().into_iter().max().unwrap_or(&0);
         if let Some(path) = type_relations_path {
-            let input_type_relations_raw: TypeRelationsRaw = match 
-            fs::read_to_string(path)
+            let input_type_relations_raw: TypeRelationsRaw = match fs::read_to_string(path)
                 .map_err(|e| e.to_string())
                 .and_then(|input_type_relations_str| {
                     serde_json::from_str(&input_type_relations_str).map_err(|e| e.to_string())
                 }) {
                 Ok(relations) => relations,
-                Err(e) => panic!("Failed to read input type relations: {:?}, {}", e, path.display()),
+                Err(e) => panic!(
+                    "Failed to read input type relations: {:?}, {}",
+                    e,
+                    path.display()
+                ),
             };
             let input_relations = input_type_relations_raw.relations;
             for relation in input_relations.iter() {
@@ -1095,7 +1092,7 @@ impl<'tcx> CallGraph<'tcx> {
         }
     }
 
-    fn fn_of_interest()->HashSet<String> {
+    fn fn_of_interest() -> HashSet<String> {
         let mut functions_of_interest = HashSet::new();
 
         functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
@@ -1109,7 +1106,7 @@ impl<'tcx> CallGraph<'tcx> {
         functions_of_interest.insert("std::fs::write".to_string());
         functions_of_interest.insert("std::fs::{impl#}::write".to_string());
         functions_of_interest.insert("std::fs::{impl#}::create".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::_create".to_string());//create	std::fs::DirBuilder
+        functions_of_interest.insert("std::fs::{impl#}::_create".to_string()); //create	std::fs::DirBuilder
         functions_of_interest.insert("std::fs::{impl#}::open".to_string());
         functions_of_interest.insert("std::fs::read".to_string());
         functions_of_interest.insert("std::fs::read_to_string".to_string());
@@ -1191,37 +1188,38 @@ impl<'tcx> CallGraph<'tcx> {
         functions_of_interest.insert("".to_string());
         //cfg macro
         functions_of_interest.insert("std::io::stdio::stdin".to_string()); //read_line	std::io::stdin
-        //unreachable_unchecked	std::hint
-        //parent_id	Function std::os::unix::process
+                                                                           //unreachable_unchecked	std::hint
+                                                                           //parent_id	Function std::os::unix::process
         functions_of_interest.insert("std::env::args_os".to_string());
         functions_of_interest.insert("std::env::args".to_string());
         functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
         functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
 
-
         functions_of_interest.insert("std::io::Write::write_all".to_string());
 
         return functions_of_interest;
-
     }
 
-    fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>){
+    fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>) {
         println!("Call Path: ");
         for (call, loc) in call_path {
-                println!("Call: {:?}, {:?}", call, loc);
-                
-            }
-
+            println!("Call: {:?}, {:?}", call, loc);
+        }
     }
 
-    fn get_path(callee_to_caller_loc: &HashMap<&DefId, Vec<(&DefId, &&rustc_span::Span)>>, search_callee:DefId, call_path: &Vec<(&DefId, &&rustc_span::Span)>){
-
+    fn get_path(
+        callee_to_caller_loc: &HashMap<&DefId, Vec<(&DefId, &&rustc_span::Span)>>,
+        search_callee: DefId,
+        call_path: &Vec<(&DefId, &&rustc_span::Span)>,
+    ) {
         match callee_to_caller_loc.get(&search_callee) {
-            None => {Self::print_call_path(call_path);},
+            None => {
+                Self::print_call_path(call_path);
+            }
             Some(list_of_callers) => {
                 //println!("{:?}",list_of_callers);
                 for (call, loc) in list_of_callers {
-                    if call_path.contains(&(call, loc)){
+                    if call_path.contains(&(call, loc)) {
                         //have not tested this at all
                         Self::print_call_path(call_path);
                         println!("loop");
@@ -1230,20 +1228,14 @@ impl<'tcx> CallGraph<'tcx> {
                         //if not a loop call the new fn
                         let mut new_path = (*call_path).clone();
                         new_path.push((call, loc));
-                        
+
                         Self::get_path(callee_to_caller_loc, **call, &new_path);
-
-
                     }
-                    
                 }
-                    
-            },
+            }
         }
-
-
     }
-    
+
     /// Top-level output function.
     ///
     /// First applies a set of reductions to the call graph.
@@ -1255,89 +1247,85 @@ impl<'tcx> CallGraph<'tcx> {
         sites.sort();
 
         //let mut found_parent = true;
-        
+
         let functions_of_interest = Self::fn_of_interest();
-        
 
         //IT WOULD PROBS BE BETTER TO DO THIS ALL WHEN THE CALL GRAPH STUFF IS ORIGINALLY SET UP BUT THIS SHOULD WORK FOR NOW
         let mut callee_to_caller_loc = HashMap::new();
-        for (loc, (caller, callee)) in sites.iter(){
-            
-            callee_to_caller_loc.entry(callee).or_insert_with(Vec::new).push((caller, loc));
-           
-
+        for (loc, (caller, callee)) in sites.iter() {
+            callee_to_caller_loc
+                .entry(callee)
+                .or_insert_with(Vec::new)
+                .push((caller, loc));
         }
 
-        
         //might duplicate if there are multiple sensitive calls in a trace
-        for (loc, (caller, callee)) in sites.iter(){
+        for (loc, (caller, callee)) in sites.iter() {
             //println!("all fns: {:?}", callee);
-            
-            println!("{:?}",callee);
-            
-            if functions_of_interest.contains(&*format_name_no_num(*callee)){
+
+            let formatted_name = &*format_name_no_num(*callee);
+
+            //println!("{:?} {:?}",callee, formatted_name);
+
+            if functions_of_interest.contains(&*format_name_no_num(*callee))
+                || formatted_name.starts_with("libc")
+                || formatted_name.starts_with("winapi")
+            {
+                //check that this is how that particular lib shows up
                 println!("~~~New Fn~~~~~");
                 let mut call_path = Vec::new();
                 call_path.push((callee, loc));
+                call_path.push((caller, loc));
                 //println!("Before call get_path {:?}", call_path);
                 Self::get_path(&callee_to_caller_loc, *caller, &call_path);
-
 
                 //let mut found_parent=true;
                 //println!("Potentially Dangerous Fn: {:?}, {:?}", callee, loc);
                 //println!("Caller: {:?}", caller);
 
-
                 //
                 //this only does one path!!!!
                 //stop when it can't find a new path up
-                 /*
-                 search_callee = caller;
-                 while found_parent {
-                    found_parent=false;
-                   match callee_to_caller_loc.get(search_callee) {
-                        Some((caller2, loc2)) => {
-                            println!("Caller: {:?}, {:?}", search_callee, loc2);
-                            //println!("Caller: {:?}", caller2);
-                            search_callee = caller2;
-                            found_parent=true;
-                        },
-                        None => println!("Caller: {:?}, no parent", search_callee)
-                    }
-
-                  
-            }*/
+                /*
+                     search_callee = caller;
+                     while found_parent {
+                        found_parent=false;
+                       match callee_to_caller_loc.get(search_callee) {
+                            Some((caller2, loc2)) => {
+                                println!("Caller: {:?}, {:?}", search_callee, loc2);
+                                //println!("Caller: {:?}", caller2);
+                                search_callee = caller2;
+                                found_parent=true;
+                            },
+                            None => println!("Caller: {:?}, no parent", search_callee)
+                        }
 
 
+                }*/
+            } else {
+                //println!("~~~New Fn~~~~~");
+                //println!("{:?}, {:?}", callee, format_name_no_num(*callee));
+            }
         }
-        else {
-            //println!("~~~New Fn~~~~~");
-            //println!("{:?}, {:?}", callee, format_name_no_num(*callee));
-
-        }
-        
     }
 }
 
-}
-
-/* 
+/*
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
 */
 
 /// Extracts a function name from the DefId of a function.
-    fn format_name_no_num(defid: DefId) -> Box<str> {
-        let tmp1 = format!("{:?}", defid);
-        let tmp2: &str = tmp1.split("~ ").collect::<Vec<&str>>()[1];
-        let tmp3 = tmp2.replace(')', "");
-        let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
-        let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
-        let num_removed: String = rhs.chars().filter(|c| !c.is_digit(10)).collect();
-        format!("{}{}", lhs, num_removed).into_boxed_str()
-    }
-
+fn format_name_no_num(defid: DefId) -> Box<str> {
+    let tmp1 = format!("{:?}", defid);
+    let tmp2: &str = tmp1.split("~ ").collect::<Vec<&str>>()[1];
+    let tmp3 = tmp2.replace(')', "");
+    let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
+    let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
+    let num_removed: String = rhs.chars().filter(|c| !c.is_digit(10)).collect();
+    format!("{}{}", lhs, num_removed).into_boxed_str()
+}
 
 /// Supported Datalog output formats
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
