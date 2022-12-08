@@ -1,0 +1,8 @@
+For building the modified version of MIRAI
+cargo install --locked --path ./checker
+
+
+You have to set up your call graph config file first there are instructions for that in the mirai docs but I can send you mine if you want
+export MIRAI_FLAGS="--call_graph_config <path/to/config/json>"
+Interact with the main file in some way
+then run cargo mirai
