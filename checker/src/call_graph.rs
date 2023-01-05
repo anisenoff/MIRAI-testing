@@ -436,7 +436,8 @@ impl<'tcx> CallGraph<'tcx> {
         callee: DefId,
         external_callee: bool,
     ) {
-        if self.config.call_sites_output_path.is_some() && !self.non_local_defs.contains(&caller) {
+        if self.config.call_sites_output_path.is_some() {
+            //&& !self.non_local_defs.contains(&caller) {
             self.call_sites.insert(loc, (caller, callee));
             if external_callee {
                 self.non_local_defs.insert(callee);
@@ -1096,7 +1097,7 @@ impl<'tcx> CallGraph<'tcx> {
         }
     }
 
-    fn fn_of_interest(&self) -> HashSet<String> {
+    fn fn_of_interest(&self) -> Vec<String> {
         let mut functions_of_interest = HashSet::new();
         let mut encounter_all = false;
         for input_fn_str in &self.config.fn_of_interest {
@@ -1107,19 +1108,30 @@ impl<'tcx> CallGraph<'tcx> {
             }
         }
         if encounter_all {
-            functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
-            functions_of_interest.insert("std::process::{impl#}::output".to_string());
-            functions_of_interest.insert("std::process::{impl#}::status".to_string());
+            //functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
+            functions_of_interest.insert("std::process::spawn".to_string());
+            //functions_of_interest.insert("std::process::{impl#}::output".to_string());
+            functions_of_interest.insert("std::process::output".to_string());
+            //functions_of_interest.insert("std::process::{impl#}::status".to_string());
+            functions_of_interest.insert("std::process::status".to_string());
             //exec	std::os::unix::process::CommandExt #untested
-            functions_of_interest.insert("std::process::{impl#}::exec".to_string());
-            functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
-            functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
-            functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
+            //functions_of_interest.insert("std::process::{impl#}::exec".to_string());
+            functions_of_interest.insert("std::process::exec".to_string());
+            //functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::net::tcp::bind".to_string());
+            //functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
+            functions_of_interest.insert("std::net::tcp::connect".to_string());
+            //functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::net::udp::bind".to_string());
             functions_of_interest.insert("std::fs::write".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::write".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::create".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::_create".to_string()); //create	std::fs::DirBuilder
-            functions_of_interest.insert("std::fs::{impl#}::open".to_string());
+            //functions_of_interest.insert("std::fs::{impl#}::write".to_string());
+            functions_of_interest.insert("std::fs::write".to_string());
+            //functions_of_interest.insert("std::fs::{impl#}::create".to_string());
+            functions_of_interest.insert("std::fs::create".to_string());
+            //functions_of_interest.insert("std::fs::{impl#}::_create".to_string()); //create	std::fs::DirBuilder
+            functions_of_interest.insert("std::fs::_create".to_string()); //create	std::fs::DirBuilder
+                                                                          //functions_of_interest.insert("std::fs::{impl#}::open".to_string());
+            functions_of_interest.insert("std::fs::open".to_string());
             functions_of_interest.insert("std::fs::read".to_string());
             functions_of_interest.insert("std::fs::read_to_string".to_string());
             //include_str	macro
@@ -1128,7 +1140,8 @@ impl<'tcx> CallGraph<'tcx> {
             functions_of_interest.insert("std::fs::remove_dir".to_string());
             functions_of_interest.insert("std::fs::remove_dir_all".to_string());
             functions_of_interest.insert("std::fs::remove_file".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::set_len".to_string());
+            //functions_of_interest.insert("std::fs::{impl#}::set_len".to_string());
+            functions_of_interest.insert("std::fs::set_len".to_string());
             functions_of_interest.insert("std::fs::rename".to_string());
             functions_of_interest.insert("std::fs::copy".to_string());
             functions_of_interest.insert("std::fs::create_dir".to_string());
@@ -1140,54 +1153,68 @@ impl<'tcx> CallGraph<'tcx> {
             //symlink_file	std::os::windows::fs #untested
             functions_of_interest.insert("std::os::windows::fs::symlink_file".to_string());
             functions_of_interest.insert("std::fs::read_dir".to_string());
-            functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
+            functions_of_interest.insert("std::path::read_dir".to_string());
             functions_of_interest.insert("std::os::unix::fs::chroot".to_string());
             functions_of_interest.insert("std::env::set_current_dir".to_string());
             //option_env	macro
             functions_of_interest.insert("std::env::set_var".to_string());
             functions_of_interest.insert("std::env::remove_var".to_string());
-            functions_of_interest.insert("std::net::addr::{impl#}::to_socket_addrs".to_string());
+            //functions_of_interest.insert("std::net::addr::{impl#}::to_socket_addrs".to_string());
+            functions_of_interest.insert("std::net::addr::to_socket_addrs".to_string());
+            functions_of_interest.insert("std::net::socket_addr::to_socket_addrs".to_string());
             functions_of_interest.insert("std::fs::read_link".to_string());
-            functions_of_interest.insert("std::path::{impl#}::read_link".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::read_link".to_string());
+            functions_of_interest.insert("std::path::read_link".to_string());
             //set_permissions	std::fs #covered by metadata
             //metadata	std::path::Path
             functions_of_interest.insert("std::fs::metadata".to_string());
             //symlink_metadata	std::fs and std::path::Path
             functions_of_interest.insert("std::fs::symlink_metadata".to_string());
-            functions_of_interest.insert("std::path::{impl#}::symlink_metadata".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::symlink_metadata".to_string());
+            functions_of_interest.insert("std::path::symlink_metadata".to_string());
             //set_permissions	std::fs::File
             functions_of_interest.insert("std::env::vars".to_string());
             functions_of_interest.insert("std::env::var_os".to_string());
             functions_of_interest.insert("std::env::var".to_string());
-            functions_of_interest.insert("std::path::{impl#}::exists".to_string());
-            functions_of_interest.insert("std::path::{impl#}::is_file".to_string());
-            functions_of_interest.insert("std::path::{impl#}::is_dir".to_string());
-            functions_of_interest.insert("std::path::{impl#}::is_symlink".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::exists".to_string());
+            functions_of_interest.insert("std::path::exists".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::is_file".to_string());
+            functions_of_interest.insert("std::path::is_file".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::is_dir".to_string());
+            functions_of_interest.insert("std::path::is_dir".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::is_symlink".to_string());
+            functions_of_interest.insert("std::path::is_symlink".to_string());
             //is_symlink_dir	std::os::windows::fs::FileTypeExt
             //is_symlink_file	std::os::windows::fs::FileTypeExt
             //try_exists	std::fs #unstable
-            functions_of_interest.insert("std::path::{impl#}::try_exists".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::try_exists".to_string());
+            functions_of_interest.insert("std::path::try_exists".to_string());
             functions_of_interest.insert("std::env::current_dir".to_string());
             functions_of_interest.insert("std::env::current_exe".to_string());
             functions_of_interest.insert("std::env::temp_dir".to_string());
             functions_of_interest.insert("std::fs::canonicalize".to_string());
-            functions_of_interest.insert("std::path::{impl#}::canonicalize".to_string());
-            functions_of_interest.insert("std::os::unix::net::datagram::{impl#}::bind".to_string());
+            //functions_of_interest.insert("std::path::{impl#}::canonicalize".to_string());
+            functions_of_interest.insert("std::path::canonicalize".to_string());
+            //functions_of_interest.insert("std::os::unix::net::datagram::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::os::unix::net::datagram::bind".to_string());
             //bind_addr	std::os::unix::net::UnixDatagram nightly
             //connect	std::os::unix::net::UnixDatagram
-            functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("".to_string());
             //connect_addr	std::os::unix::net::UnixDatagram nightly
             //send_to	std::os::unix::net::UnixDatagram
-            functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("".to_string());
             //send_to_addr	std::os::unix::net::UnixDatagram
-            functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("".to_string());
             //shutdown	std::os::unix::net::UnixDatagram
-            functions_of_interest.insert("".to_string());
-            functions_of_interest.insert("std::os::unix::net::listener::{impl#}::bind".to_string());
-            functions_of_interest
-                .insert("std::os::unix::net::stream::{impl#}::connect".to_string());
+            //functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("std::os::unix::net::listener::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::os::unix::net::listener::bind".to_string());
+            //functions_of_interest
+            //    .insert("std::os::unix::net::stream::{impl#}::connect".to_string());
+            functions_of_interest.insert("std::os::unix::net::stream::connect".to_string());
             //recv_from	std::os::unix::net::UnixDatagram
-            functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("".to_string());
             //is_x86_feature_detected	std macro
             //ARCH	std::env::consts
             //DLL_EXTENSION	std::env::consts
@@ -1198,23 +1225,29 @@ impl<'tcx> CallGraph<'tcx> {
             //FAMILY	std::env::consts
             //OS	std::env::consts
             //cfg	std
-            functions_of_interest.insert("".to_string());
+            //functions_of_interest.insert("".to_string());
             //cfg macro
             functions_of_interest.insert("std::io::stdio::stdin".to_string()); //read_line	std::io::stdin
                                                                                //unreachable_unchecked	std::hint
                                                                                //parent_id	Function std::os::unix::process
             functions_of_interest.insert("std::env::args_os".to_string());
             functions_of_interest.insert("std::env::args".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
-            functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
-
+            //functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
+            functions_of_interest.insert("std::fs::sync_all".to_string());
+            //functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
+            functions_of_interest.insert("std::fs::sync_data".to_string());
             functions_of_interest.insert("std::io::Write::write_all".to_string());
 
             functions_of_interest.insert("libc".to_string());
             functions_of_interest.insert("winapi".to_string());
         }
 
-        return functions_of_interest;
+        //turn functions_of_interest into a list (should all be unique)
+        let mut vec_functions_of_interest = Vec::from_iter(functions_of_interest);
+        //sort the list
+        vec_functions_of_interest.sort();
+
+        return vec_functions_of_interest;
     }
 
     fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>) {
@@ -1285,8 +1318,9 @@ impl<'tcx> CallGraph<'tcx> {
 
             let formatted_name = &*format_name_no_num(*callee);
 
-            println!("{:?} {:?}", callee, formatted_name);
-
+            //println!("{:?} {:?}", callee, formatted_name);
+            //Would probs be preferable to swap the hashmap to a list and
+            // do some sort of binary search?
             let mut is_sensitive_fn = false;
             for path_of_interest in &functions_of_interest {
                 if formatted_name.starts_with(&*path_of_interest) {
@@ -1294,12 +1328,9 @@ impl<'tcx> CallGraph<'tcx> {
                     break;
                 }
             }
-
-            if is_sensitive_fn
-            //functions_of_interest.contains(&*format_name_no_num(*callee))
-            //|| formatted_name.starts_with("libc")
-            //|| formatted_name.starts_with("winapi")
-            {
+            //println!("{} {}", binary_search(&functions_of_interest, formatted_name.to_string()),formatted_name.to_string());
+            //binary_search(&functions_of_interest, formatted_name.to_string())
+            if is_sensitive_fn {
                 //check that this is how that particular lib shows up
                 println!("~~~New Fn~~~~~");
                 let mut call_path = Vec::new();
@@ -1307,30 +1338,6 @@ impl<'tcx> CallGraph<'tcx> {
                 call_path.push((caller, loc));
                 //println!("Before call get_path {:?}", call_path);
                 Self::get_path(&callee_to_caller_loc, *caller, &call_path);
-
-                //let mut found_parent=true;
-                //println!("Potentially Dangerous Fn: {:?}, {:?}", callee, loc);
-                //println!("Caller: {:?}", caller);
-
-                //
-                //this only does one path!!!!
-                //stop when it can't find a new path up
-                /*
-                     search_callee = caller;
-                     while found_parent {
-                        found_parent=false;
-                       match callee_to_caller_loc.get(search_callee) {
-                            Some((caller2, loc2)) => {
-                                println!("Caller: {:?}, {:?}", search_callee, loc2);
-                                //println!("Caller: {:?}", caller2);
-                                search_callee = caller2;
-                                found_parent=true;
-                            },
-                            None => println!("Caller: {:?}, no parent", search_callee)
-                        }
-
-
-                }*/
             } else {
                 //println!("~~~New Fn~~~~~");
                 //println!("{:?}, {:?}", callee, format_name_no_num(*callee));
@@ -1340,17 +1347,47 @@ impl<'tcx> CallGraph<'tcx> {
 }
 
 /*
+fn binary_search(arr:&Vec<String>, find:String) -> bool {
+    let mut low = 0;
+    let mut high = arr.len() - 1;
+    let mut mid;
+
+    while low <= high{
+        mid = (high + low)/2;
+
+        println!("{}, {}, {}", low, high, mid);
+        println!("{}, {}", arr[mid],(&find));
+        if arr[mid].starts_with(&find) {
+            return true;
+        }
+        else if arr[mid] < find{
+            low = mid + 1
+        }
+
+        else if arr[mid] > find{
+            high = mid - 1;
+        }
+
+
+    }
+    return false;
+
+
+}
+*/
+
+/*
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
 */
 
-/// Extracts a function name from the DefId of a function.
+/// Extracts a function name from the DefId of a function
+/// and is independent of the instance (in the case of Paths etc.)
 fn format_name_no_num(defid: DefId) -> Box<str> {
     let tmp1 = format!("{:?}", defid);
     let tmp2: &str = tmp1.split("~ ").collect::<Vec<&str>>()[1];
     let tmp3 = tmp2.replace(')', "");
-
     /*
         let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
         let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
@@ -1359,9 +1396,8 @@ fn format_name_no_num(defid: DefId) -> Box<str> {
         let bracket_rm = [lhs, &num_removed].join("");
         format!("{}", bracket_rm.replace("{impl#}::", "")).into_boxed_str()
     */
-
-    let re = Regex::new(r"/::{#.+}|::\[#.+\]/g").unwrap();
-    format!("{}", re.replace(&tmp3, "")).into_boxed_str()
+    let re = Regex::new(r"::\{[a-z]+#\d+\}|::\[.+\]|\[.+\]").unwrap();
+    format!("{}", re.replace_all(&tmp3, "")).into_boxed_str()
 }
 
 /// Supported Datalog output formats
