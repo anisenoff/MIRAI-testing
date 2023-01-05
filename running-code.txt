@@ -1,8 +1,28 @@
 For building the modified version of MIRAI
 cargo install --locked --path ./checker
 
+You have to set up your call graph config file first there are instructions for that in the mirai docs. Tho only difference is you need to include a new "fn_of_interest" key and give it a list of strings representing the functions you are interested in. that you are interested in checking for. If you put the string "default" anywhere in the list it will add in all of the fns we have discussed in the past as being potentially dangerous. All other strings should look something like this "std::fs::create_dir" or "std::fs" and mirai will match any function that starts with that path. Be warned sometimes the path to an exact function you are interested in might not match up to what mirai actually records (lmk if you run into that issue and I can help, I haven't thought of a good way of explaining it yet as you can see from all this rambling!) 
 
-You have to set up your call graph config file first there are instructions for that in the mirai docs but I can send you mine if you want
+
+Example config file:
+{
+    "call_sites_output_path": "call_sites.json",
+    "dot_output_path": "graph.dot",
+    "reductions": [],
+    "included_crates": [],
+    "datalog_config": {
+        "ddlog_output_path": "graph.dat",
+        "type_map_output_path": "types.json",
+        "datalog_backend": "DifferentialDatalog"
+    },
+    "fn_of_interest": ["default"]
+}
+
+
+
+
+
+
 export MIRAI_FLAGS="--call_graph_config <path/to/config/json>"
 run cargo clean or interact with the main file in some way
 then run cargo mirai
