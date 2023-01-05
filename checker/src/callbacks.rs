@@ -170,6 +170,7 @@ impl MiraiCallbacks {
         };
 
         crate_visitor.analyze_some_bodies();
+
         crate_visitor.call_graph.output();
         crate_visitor.call_graph.print_output();
     }

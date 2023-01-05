@@ -115,6 +115,8 @@ pub struct CallGraphConfig {
     included_crates: Vec<Box<str>>,
     /// Datalog output configuration
     datalog_config: Option<DatalogConfig>,
+    ///Functions to include
+    fn_of_interest: Vec<Box<str>>,
 }
 
 impl CallGraphConfig {
@@ -124,6 +126,7 @@ impl CallGraphConfig {
         reductions: Vec<CallGraphReduction>,
         included_crates: Vec<Box<str>>,
         datalog_config: Option<DatalogConfig>,
+        fn_of_interest: Vec<Box<str>>,
     ) -> CallGraphConfig {
         CallGraphConfig {
             call_sites_output_path,
@@ -131,6 +134,7 @@ impl CallGraphConfig {
             reductions,
             included_crates,
             datalog_config,
+            fn_of_interest,
         }
     }
 
@@ -1092,110 +1096,123 @@ impl<'tcx> CallGraph<'tcx> {
         }
     }
 
-    fn fn_of_interest() -> HashSet<String> {
+    fn fn_of_interest(&self) -> HashSet<String> {
         let mut functions_of_interest = HashSet::new();
+        let mut encounter_all = false;
+        for input_fn_str in &self.config.fn_of_interest {
+            if (**input_fn_str).eq("default") {
+                encounter_all = true;
+            } else {
+                functions_of_interest.insert(input_fn_str.to_string());
+            }
+        }
+        if encounter_all {
+            functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
+            functions_of_interest.insert("std::process::{impl#}::output".to_string());
+            functions_of_interest.insert("std::process::{impl#}::status".to_string());
+            //exec	std::os::unix::process::CommandExt #untested
+            functions_of_interest.insert("std::process::{impl#}::exec".to_string());
+            functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
+            functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
+            functions_of_interest.insert("std::fs::write".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::write".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::create".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::_create".to_string()); //create	std::fs::DirBuilder
+            functions_of_interest.insert("std::fs::{impl#}::open".to_string());
+            functions_of_interest.insert("std::fs::read".to_string());
+            functions_of_interest.insert("std::fs::read_to_string".to_string());
+            //include_str	macro
+            //include_bytes	macro
+            //include	macro
+            functions_of_interest.insert("std::fs::remove_dir".to_string());
+            functions_of_interest.insert("std::fs::remove_dir_all".to_string());
+            functions_of_interest.insert("std::fs::remove_file".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::set_len".to_string());
+            functions_of_interest.insert("std::fs::rename".to_string());
+            functions_of_interest.insert("std::fs::copy".to_string());
+            functions_of_interest.insert("std::fs::create_dir".to_string());
+            functions_of_interest.insert("std::fs::create_dir_all".to_string());
+            functions_of_interest.insert("std::fs::hard_link".to_string());
+            functions_of_interest.insert("std::os::unix::fs::symlink".to_string());
+            //symlink_dir	std::os::windows::fs #untested
+            functions_of_interest.insert("std::os::windows::fs::symlink_dir".to_string());
+            //symlink_file	std::os::windows::fs #untested
+            functions_of_interest.insert("std::os::windows::fs::symlink_file".to_string());
+            functions_of_interest.insert("std::fs::read_dir".to_string());
+            functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
+            functions_of_interest.insert("std::os::unix::fs::chroot".to_string());
+            functions_of_interest.insert("std::env::set_current_dir".to_string());
+            //option_env	macro
+            functions_of_interest.insert("std::env::set_var".to_string());
+            functions_of_interest.insert("std::env::remove_var".to_string());
+            functions_of_interest.insert("std::net::addr::{impl#}::to_socket_addrs".to_string());
+            functions_of_interest.insert("std::fs::read_link".to_string());
+            functions_of_interest.insert("std::path::{impl#}::read_link".to_string());
+            //set_permissions	std::fs #covered by metadata
+            //metadata	std::path::Path
+            functions_of_interest.insert("std::fs::metadata".to_string());
+            //symlink_metadata	std::fs and std::path::Path
+            functions_of_interest.insert("std::fs::symlink_metadata".to_string());
+            functions_of_interest.insert("std::path::{impl#}::symlink_metadata".to_string());
+            //set_permissions	std::fs::File
+            functions_of_interest.insert("std::env::vars".to_string());
+            functions_of_interest.insert("std::env::var_os".to_string());
+            functions_of_interest.insert("std::env::var".to_string());
+            functions_of_interest.insert("std::path::{impl#}::exists".to_string());
+            functions_of_interest.insert("std::path::{impl#}::is_file".to_string());
+            functions_of_interest.insert("std::path::{impl#}::is_dir".to_string());
+            functions_of_interest.insert("std::path::{impl#}::is_symlink".to_string());
+            //is_symlink_dir	std::os::windows::fs::FileTypeExt
+            //is_symlink_file	std::os::windows::fs::FileTypeExt
+            //try_exists	std::fs #unstable
+            functions_of_interest.insert("std::path::{impl#}::try_exists".to_string());
+            functions_of_interest.insert("std::env::current_dir".to_string());
+            functions_of_interest.insert("std::env::current_exe".to_string());
+            functions_of_interest.insert("std::env::temp_dir".to_string());
+            functions_of_interest.insert("std::fs::canonicalize".to_string());
+            functions_of_interest.insert("std::path::{impl#}::canonicalize".to_string());
+            functions_of_interest.insert("std::os::unix::net::datagram::{impl#}::bind".to_string());
+            //bind_addr	std::os::unix::net::UnixDatagram nightly
+            //connect	std::os::unix::net::UnixDatagram
+            functions_of_interest.insert("".to_string());
+            //connect_addr	std::os::unix::net::UnixDatagram nightly
+            //send_to	std::os::unix::net::UnixDatagram
+            functions_of_interest.insert("".to_string());
+            //send_to_addr	std::os::unix::net::UnixDatagram
+            functions_of_interest.insert("".to_string());
+            //shutdown	std::os::unix::net::UnixDatagram
+            functions_of_interest.insert("".to_string());
+            functions_of_interest.insert("std::os::unix::net::listener::{impl#}::bind".to_string());
+            functions_of_interest
+                .insert("std::os::unix::net::stream::{impl#}::connect".to_string());
+            //recv_from	std::os::unix::net::UnixDatagram
+            functions_of_interest.insert("".to_string());
+            //is_x86_feature_detected	std macro
+            //ARCH	std::env::consts
+            //DLL_EXTENSION	std::env::consts
+            //DLL_PREFIX	std::env::consts
+            //DLL_SUFFIX	std::env::consts
+            //EXE_EXTENSION	std::env::consts
+            //EXE_SUFFIX	std::env::consts
+            //FAMILY	std::env::consts
+            //OS	std::env::consts
+            //cfg	std
+            functions_of_interest.insert("".to_string());
+            //cfg macro
+            functions_of_interest.insert("std::io::stdio::stdin".to_string()); //read_line	std::io::stdin
+                                                                               //unreachable_unchecked	std::hint
+                                                                               //parent_id	Function std::os::unix::process
+            functions_of_interest.insert("std::env::args_os".to_string());
+            functions_of_interest.insert("std::env::args".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
+            functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
 
-        functions_of_interest.insert("std::process::{impl#}::spawn".to_string());
-        functions_of_interest.insert("std::process::{impl#}::output".to_string());
-        functions_of_interest.insert("std::process::{impl#}::status".to_string());
-        //exec	std::os::unix::process::CommandExt #untested
-        functions_of_interest.insert("std::process::{impl#}::exec".to_string());
-        functions_of_interest.insert("std::net::tcp::{impl#}::bind".to_string());
-        functions_of_interest.insert("std::net::tcp::{impl#}::connect".to_string());
-        functions_of_interest.insert("std::net::udp::{impl#}::bind".to_string());
-        functions_of_interest.insert("std::fs::write".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::write".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::create".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::_create".to_string()); //create	std::fs::DirBuilder
-        functions_of_interest.insert("std::fs::{impl#}::open".to_string());
-        functions_of_interest.insert("std::fs::read".to_string());
-        functions_of_interest.insert("std::fs::read_to_string".to_string());
-        //include_str	macro
-        //include_bytes	macro
-        //include	macro
-        functions_of_interest.insert("std::fs::remove_dir".to_string());
-        functions_of_interest.insert("std::fs::remove_dir_all".to_string());
-        functions_of_interest.insert("std::fs::remove_file".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::set_len".to_string());
-        functions_of_interest.insert("std::fs::rename".to_string());
-        functions_of_interest.insert("std::fs::copy".to_string());
-        functions_of_interest.insert("std::fs::create_dir".to_string());
-        functions_of_interest.insert("std::fs::create_dir_all".to_string());
-        functions_of_interest.insert("std::fs::hard_link".to_string());
-        functions_of_interest.insert("std::os::unix::fs::symlink".to_string());
-        //symlink_dir	std::os::windows::fs #untested
-        functions_of_interest.insert("std::os::windows::fs::symlink_dir".to_string());
-        //symlink_file	std::os::windows::fs #untested
-        functions_of_interest.insert("std::os::windows::fs::symlink_file".to_string());
-        functions_of_interest.insert("std::fs::read_dir".to_string());
-        functions_of_interest.insert("std::path::{impl#}::read_dir".to_string());
-        functions_of_interest.insert("std::os::unix::fs::chroot".to_string());
-        functions_of_interest.insert("std::env::set_current_dir".to_string());
-        //option_env	macro
-        functions_of_interest.insert("std::env::set_var".to_string());
-        functions_of_interest.insert("std::env::remove_var".to_string());
-        functions_of_interest.insert("std::net::addr::{impl#}::to_socket_addrs".to_string());
-        functions_of_interest.insert("std::fs::read_link".to_string());
-        functions_of_interest.insert("std::path::{impl#}::read_link".to_string());
-        //set_permissions	std::fs #covered by metadata
-        //metadata	std::path::Path
-        functions_of_interest.insert("std::fs::metadata".to_string());
-        //symlink_metadata	std::fs and std::path::Path
-        functions_of_interest.insert("std::fs::symlink_metadata".to_string());
-        functions_of_interest.insert("std::path::{impl#}::symlink_metadata".to_string());
-        //set_permissions	std::fs::File
-        functions_of_interest.insert("std::env::vars".to_string());
-        functions_of_interest.insert("std::env::var_os".to_string());
-        functions_of_interest.insert("std::env::var".to_string());
-        functions_of_interest.insert("std::path::{impl#}::exists".to_string());
-        functions_of_interest.insert("std::path::{impl#}::is_file".to_string());
-        functions_of_interest.insert("std::path::{impl#}::is_dir".to_string());
-        functions_of_interest.insert("std::path::{impl#}::is_symlink".to_string());
-        //is_symlink_dir	std::os::windows::fs::FileTypeExt
-        //is_symlink_file	std::os::windows::fs::FileTypeExt
-        //try_exists	std::fs #unstable
-        functions_of_interest.insert("std::path::{impl#}::try_exists".to_string());
-        functions_of_interest.insert("std::env::current_dir".to_string());
-        functions_of_interest.insert("std::env::current_exe".to_string());
-        functions_of_interest.insert("std::env::temp_dir".to_string());
-        functions_of_interest.insert("std::fs::canonicalize".to_string());
-        functions_of_interest.insert("std::path::{impl#}::canonicalize".to_string());
-        functions_of_interest.insert("std::os::unix::net::datagram::{impl#}::bind".to_string());
-        //bind_addr	std::os::unix::net::UnixDatagram nightly
-        //connect	std::os::unix::net::UnixDatagram
-        functions_of_interest.insert("".to_string());
-        //connect_addr	std::os::unix::net::UnixDatagram nightly
-        //send_to	std::os::unix::net::UnixDatagram
-        functions_of_interest.insert("".to_string());
-        //send_to_addr	std::os::unix::net::UnixDatagram
-        functions_of_interest.insert("".to_string());
-        //shutdown	std::os::unix::net::UnixDatagram
-        functions_of_interest.insert("".to_string());
-        functions_of_interest.insert("std::os::unix::net::listener::{impl#}::bind".to_string());
-        functions_of_interest.insert("std::os::unix::net::stream::{impl#}::connect".to_string());
-        //recv_from	std::os::unix::net::UnixDatagram
-        functions_of_interest.insert("".to_string());
-        //is_x86_feature_detected	std macro
-        //ARCH	std::env::consts
-        //DLL_EXTENSION	std::env::consts
-        //DLL_PREFIX	std::env::consts
-        //DLL_SUFFIX	std::env::consts
-        //EXE_EXTENSION	std::env::consts
-        //EXE_SUFFIX	std::env::consts
-        //FAMILY	std::env::consts
-        //OS	std::env::consts
-        //cfg	std
-        functions_of_interest.insert("".to_string());
-        //cfg macro
-        functions_of_interest.insert("std::io::stdio::stdin".to_string()); //read_line	std::io::stdin
-                                                                           //unreachable_unchecked	std::hint
-                                                                           //parent_id	Function std::os::unix::process
-        functions_of_interest.insert("std::env::args_os".to_string());
-        functions_of_interest.insert("std::env::args".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::sync_all".to_string());
-        functions_of_interest.insert("std::fs::{impl#}::sync_data".to_string());
+            functions_of_interest.insert("std::io::Write::write_all".to_string());
 
-        functions_of_interest.insert("std::io::Write::write_all".to_string());
+            functions_of_interest.insert("libc".to_string());
+            functions_of_interest.insert("winapi".to_string());
+        }
 
         return functions_of_interest;
     }
@@ -1242,13 +1259,16 @@ impl<'tcx> CallGraph<'tcx> {
     /// Then produces Datalog and / or dot file output of the call graph.
     pub fn print_output(&self) {
         let call_graph = self.reduce_graph(self.clone(), &self.config.reductions);
+
+        //println!("{:?} ",&self.config.fn_of_interest);
+
         let mut sites: Vec<(&rustc_span::Span, &(DefId, DefId))> =
             call_graph.call_sites.iter().collect();
         sites.sort();
 
         //let mut found_parent = true;
 
-        let functions_of_interest = Self::fn_of_interest();
+        let functions_of_interest = Self::fn_of_interest(self);
 
         //IT WOULD PROBS BE BETTER TO DO THIS ALL WHEN THE CALL GRAPH STUFF IS ORIGINALLY SET UP BUT THIS SHOULD WORK FOR NOW
         let mut callee_to_caller_loc = HashMap::new();
@@ -1265,11 +1285,20 @@ impl<'tcx> CallGraph<'tcx> {
 
             let formatted_name = &*format_name_no_num(*callee);
 
-            //println!("{:?} {:?}",callee, formatted_name);
+            println!("{:?} {:?}", callee, formatted_name);
 
-            if functions_of_interest.contains(&*format_name_no_num(*callee))
-                || formatted_name.starts_with("libc")
-                || formatted_name.starts_with("winapi")
+            let mut is_sensitive_fn = false;
+            for path_of_interest in &functions_of_interest {
+                if formatted_name.starts_with(&*path_of_interest) {
+                    is_sensitive_fn = true;
+                    break;
+                }
+            }
+
+            if is_sensitive_fn
+            //functions_of_interest.contains(&*format_name_no_num(*callee))
+            //|| formatted_name.starts_with("libc")
+            //|| formatted_name.starts_with("winapi")
             {
                 //check that this is how that particular lib shows up
                 println!("~~~New Fn~~~~~");
@@ -1321,10 +1350,18 @@ fn format_name_no_num(defid: DefId) -> Box<str> {
     let tmp1 = format!("{:?}", defid);
     let tmp2: &str = tmp1.split("~ ").collect::<Vec<&str>>()[1];
     let tmp3 = tmp2.replace(')', "");
-    let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
-    let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
-    let num_removed: String = rhs.chars().filter(|c| !c.is_digit(10)).collect();
-    format!("{}{}", lhs, num_removed).into_boxed_str()
+
+    /*
+        let lhs = tmp3.split('[').collect::<Vec<&str>>()[0];
+        let rhs = tmp3.split(']').collect::<Vec<&str>>()[1];
+        let num_removed: String = rhs.chars().filter(|c| !c.is_digit(10)).collect();
+
+        let bracket_rm = [lhs, &num_removed].join("");
+        format!("{}", bracket_rm.replace("{impl#}::", "")).into_boxed_str()
+    */
+
+    let re = Regex::new(r"/::{#.+}|::\[#.+\]/g").unwrap();
+    format!("{}", re.replace(&tmp3, "")).into_boxed_str()
 }
 
 /// Supported Datalog output formats
