@@ -2831,7 +2831,6 @@ impl<'analysis, 'compilation, 'tcx> BodyVisitor<'analysis, 'compilation, 'tcx> {
                 if !path_rustc_type.is_scalar() {
                     return;
                 }
-
                 _self.update_value_at(path, new_value.add_tag(tag));
             },
         );

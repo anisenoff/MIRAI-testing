@@ -41,6 +41,13 @@ use crate::tag_domain::Tag;
 use crate::type_visitor::TypeVisitor;
 use crate::utils;
 
+
+/*
+struct TaintedKind<const MASK: TagPropagationSet> {}
+const TAINTED_MASK: TagPropagationSet = tag_propagation_set!(TagPropagation::SubComponent);
+type Tainted = TaintedKind<TAINTED_MASK>;
+*/
+
 /// Holds the state for the basic block visitor
 pub struct BlockVisitor<'block, 'analysis, 'compilation, 'tcx> {
     pub bv: &'block mut BodyVisitor<'analysis, 'compilation, 'tcx>,
@@ -542,7 +549,6 @@ impl<'block, 'analysis, 'compilation, 'tcx> BlockVisitor<'block, 'analysis, 'com
                 call_visitor.target = Some(target);
                 call_visitor.callee_fun_val = func_to_call;
                 call_visitor.function_constant_args = &function_constant_args;
-
                 let function_summary = call_visitor.get_function_summary().unwrap_or_default();
                 call_visitor.transfer_and_refine_into_current_environment(&function_summary);
                 // Undo the return type update of the fake return value place.

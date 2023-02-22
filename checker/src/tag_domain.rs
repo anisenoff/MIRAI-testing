@@ -179,6 +179,7 @@ impl TagDomain {
     /// Return a lifted Boolean that indicates the presence of `tag` in the tag domain element.
     #[logfn_inputs(TRACE)]
     pub fn has_tag(&self, tag: &Tag) -> BoolDomain {
+        //ALLY this is the function that checks for tags but it is called by the other
         *self.map.get(tag).unwrap_or(&self.value_for_untracked_tags)
     }
 
@@ -236,6 +237,8 @@ impl TagDomain {
             .iter()
             .map(|(tag, val)| {
                 if tag.is_propagated_by(exp_tag_prop) {
+                    //ALLY this is where we can track stuff
+                    //need this to recreate the path
                     (*tag, *val)
                 } else {
                     // If this expression blocks the tag, the tag will be mapped to False after

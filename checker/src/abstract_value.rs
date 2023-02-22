@@ -476,7 +476,6 @@ impl AbstractValue {
     #[logfn(DEBUG)]
     fn make_absence_check(&self, tag: Tag) -> Rc<AbstractValue> {
         let exp_tag_prop_opt = self.expression.get_tag_propagation();
-
         // First deal with expressions that do not propagate tags or have special propagation behavior.
         match &self.expression {
             Expression::Top => {
@@ -1107,6 +1106,8 @@ impl AbstractValueTrait for Rc<AbstractValue> {
     /// Returns an element that is `self` attached with `tag`.
     #[logfn_inputs(TRACE)]
     fn add_tag(&self, tag: Tag) -> Rc<AbstractValue> {
+        //ALLY I believe this is where the actual tag is added
+        //but this added in a higher up fn
         if self.is_bottom()
             || self.is_top()
             || self.get_cached_tags().has_tag(&tag) == BoolDomain::True
@@ -3062,6 +3063,7 @@ impl AbstractValueTrait for Rc<AbstractValue> {
     /// Returns an abstract value that describes whether `tag` is attached to `self` or not.
     #[logfn_inputs(TRACE)]
     fn has_tag(&self, tag: &Tag) -> Rc<AbstractValue> {
+        //ALLY this is the function that checks for the tag
         if self.is_bottom() || self.is_top() {
             self.clone()
         } else {

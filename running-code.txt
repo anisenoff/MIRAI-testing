@@ -20,8 +20,8 @@ Example config file:
 
 
 
-
-
+optional if you want more info
+export MIRAI_LOG="trace"
 
 export MIRAI_FLAGS="--call_graph_config <path/to/config/json>"
 run cargo clean or interact with the main file in some way

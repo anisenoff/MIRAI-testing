@@ -13,3 +13,4 @@ doctest = false # and no doc tests
 
 [dependencies]
 taint-error = { path = "./taint_error" }
+mirai-annotations = { path = "../../annotations" }

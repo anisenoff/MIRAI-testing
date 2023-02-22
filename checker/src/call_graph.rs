@@ -1247,7 +1247,7 @@ impl<'tcx> CallGraph<'tcx> {
         //sort the list
         vec_functions_of_interest.sort();
 
-        return vec_functions_of_interest;
+       vec_functions_of_interest
     }
 
     fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>) {
@@ -1293,8 +1293,6 @@ impl<'tcx> CallGraph<'tcx> {
     pub fn print_output(&self) {
         let call_graph = self.reduce_graph(self.clone(), &self.config.reductions);
 
-        //println!("{:?} ",&self.config.fn_of_interest);
-
         let mut sites: Vec<(&rustc_span::Span, &(DefId, DefId))> =
             call_graph.call_sites.iter().collect();
         sites.sort();
@@ -1314,8 +1312,8 @@ impl<'tcx> CallGraph<'tcx> {
 
         //might duplicate if there are multiple sensitive calls in a trace
         for (loc, (caller, callee)) in sites.iter() {
-            //println!("all fns: {:?}", callee);
-
+            
+            info!("all fns: {:?}", callee);
             let formatted_name = &*format_name_no_num(*callee);
 
             //println!("{:?} {:?}", callee, formatted_name);
@@ -1323,7 +1321,7 @@ impl<'tcx> CallGraph<'tcx> {
             // do some sort of binary search?
             let mut is_sensitive_fn = false;
             for path_of_interest in &functions_of_interest {
-                if formatted_name.starts_with(&*path_of_interest) {
+                if formatted_name.starts_with(path_of_interest) {
                     is_sensitive_fn = true;
                     break;
                 }
@@ -1333,9 +1331,12 @@ impl<'tcx> CallGraph<'tcx> {
             if is_sensitive_fn {
                 //check that this is how that particular lib shows up
                 println!("~~~New Fn~~~~~");
+                /*
                 let mut call_path = Vec::new();
                 call_path.push((callee, loc));
                 call_path.push((caller, loc));
+                */
+                let call_path = vec![(callee, loc), (caller, loc)];
                 //println!("Before call get_path {:?}", call_path);
                 Self::get_path(&callee_to_caller_loc, *caller, &call_path);
             } else {
@@ -1377,6 +1378,7 @@ fn binary_search(arr:&Vec<String>, find:String) -> bool {
 */
 
 /*
+//just a function for printing the type of something
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }

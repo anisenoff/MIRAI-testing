@@ -884,6 +884,7 @@ dependencies = [
 name = "taint"
 version = "0.1.0"
 dependencies = [
+ "mirai-annotations",
  "taint-error",
 ]
 
