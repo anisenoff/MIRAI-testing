@@ -41,7 +41,6 @@ use crate::tag_domain::Tag;
 use crate::type_visitor::TypeVisitor;
 use crate::utils;
 
-
 /*
 struct TaintedKind<const MASK: TagPropagationSet> {}
 const TAINTED_MASK: TagPropagationSet = tag_propagation_set!(TagPropagation::SubComponent);

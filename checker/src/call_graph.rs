@@ -1247,7 +1247,7 @@ impl<'tcx> CallGraph<'tcx> {
         //sort the list
         vec_functions_of_interest.sort();
 
-       vec_functions_of_interest
+        vec_functions_of_interest
     }
 
     fn print_call_path(call_path: &Vec<(&DefId, &&rustc_span::Span)>) {
@@ -1312,7 +1312,6 @@ impl<'tcx> CallGraph<'tcx> {
 
         //might duplicate if there are multiple sensitive calls in a trace
         for (loc, (caller, callee)) in sites.iter() {
-            
             info!("all fns: {:?}", callee);
             let formatted_name = &*format_name_no_num(*callee);
 
